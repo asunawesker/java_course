@@ -1,9 +1,15 @@
 package com.asunawesker.java.jdbc;
 
+import com.asunawesker.java.jdbc.model.Product;
+import com.asunawesker.java.jdbc.repository.ProductRepository;
+import com.asunawesker.java.jdbc.repository.Repository;
 import com.asunawesker.java.jdbc.util.DatabaseConnection;
 
 import java.sql.*;
+import java.sql.*;
+import java.util.Calendar;
 import java.util.logging.Logger;
+import java.util.Date;
 
 public class Main {
     static Logger LOGGER = Logger.getLogger(Main.class.getName());
@@ -15,15 +21,18 @@ public class Main {
     all objects which implement java.io.Closeable, can be used as a resource.
      */
     public static void main(String[] args) {
-
-        try (Connection connection = DatabaseConnection.getInstance();
-             Statement statement = connection.createStatement();
-             ResultSet resultSet = statement.executeQuery("SELECT * FROM products");){
-
-            while (resultSet.next()){
-                LOGGER.info("NAME: " + resultSet.getString("name"));
-                LOGGER.info("PRICE: " +  resultSet.getString("price"));
-            }
+        try (Connection connection = DatabaseConnection.getInstance();){
+            Repository<Product> repository = new ProductRepository();
+//            repository.getAll().forEach(product -> LOGGER.info("Name: " + product.getName() + " Price: " + product.getPrice()));
+            Product product = new Product();
+            product.setName("Mechanical keyboard");
+            product.setPrice(80.0);
+//            product.setRegistrationDate(new Date());
+            product.setId(4L);
+//            repository.save(product);
+            repository.save(product);
+//            LOGGER.info("Name: " + repository.getById(1L).getName() + " Price: " + repository.getById(1L).getPrice());
+//            repository.delete(5L);
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }

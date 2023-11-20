@@ -1,5 +1,6 @@
 package com.asunawesker.java.jdbc;
 
+import com.asunawesker.java.jdbc.model.Category;
 import com.asunawesker.java.jdbc.model.Product;
 import com.asunawesker.java.jdbc.repository.ProductRepository;
 import com.asunawesker.java.jdbc.repository.Repository;
@@ -24,13 +25,15 @@ public class Main {
         try (Connection connection = DatabaseConnection.getInstance();){
             Repository<Product> repository = new ProductRepository();
 //            repository.getAll().forEach(product -> LOGGER.info("Name: " + product.getName() + " Price: " + product.getPrice()));
-            Product product = new Product();
-            product.setName("Mechanical keyboard");
-            product.setPrice(80.0);
+//            Product product = new Product();
+//            Category category = new Category();
+//            category.setId(1L);
+//            product.setId(4L);
+//            product.setName("Keyboard with mouse");
+//            product.setPrice(45.0);
 //            product.setRegistrationDate(new Date());
-            product.setId(4L);
+//            product.setCategory(category);
 //            repository.save(product);
-            repository.save(product);
 //            LOGGER.info("Name: " + repository.getById(1L).getName() + " Price: " + repository.getById(1L).getPrice());
 //            repository.delete(5L);
         } catch (SQLException e) {

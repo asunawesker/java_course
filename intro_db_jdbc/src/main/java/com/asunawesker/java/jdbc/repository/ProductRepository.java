@@ -1,5 +1,6 @@
 package com.asunawesker.java.jdbc.repository;
 
+import com.asunawesker.java.jdbc.model.Category;
 import com.asunawesker.java.jdbc.model.Product;
 import com.asunawesker.java.jdbc.util.DatabaseConnection;
 
@@ -17,13 +18,10 @@ public class ProductRepository implements Repository<Product>{
     public List<Product> getAll() {
         List<Product> products = new ArrayList<>();
         try(Statement statement = getConnection().createStatement();
-            ResultSet resultSet = statement.executeQuery("SELECT * FROM products")) {
+            ResultSet resultSet =
+                    statement.executeQuery("SELECT p.*, c.name as category FROM products as p INNER JOIN categories as c ON (p.category_id = c.id)")) {
             while(resultSet.next()){
-                products.add(new Product(
-                        resultSet.getLong("id"),
-                        resultSet.getString("name"),
-                        resultSet.getDouble("price"),
-                        resultSet.getDate("registration_date")));
+                products.add(createProduct(resultSet));
             }
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -35,15 +33,11 @@ public class ProductRepository implements Repository<Product>{
     public Product getById(Long id) {
         Product product = null;
         try(PreparedStatement statement = getConnection()
-                .prepareStatement("SELECT * FROM products WHERE id = ?");) {
+                .prepareStatement("SELECT p.*, c.name as category FROM products as p INNER JOIN categories as c ON (p.category_id = c.id) WHERE id = ?");) {
             statement.setLong(1, id);
             try(ResultSet resultSet = statement.executeQuery();){
                 if(resultSet.next()){
-                    product = new Product(
-                            resultSet.getLong("id"),
-                            resultSet.getString("name"),
-                            resultSet.getDouble("price"),
-                            resultSet.getDate("registration_date"));
+                    product = createProduct(resultSet);
                 }
             }
         } catch (SQLException e) {
@@ -56,18 +50,20 @@ public class ProductRepository implements Repository<Product>{
     public void save(Product product) {
         String sql = null;
         if (product.getId() != null && product.getId() > 0) {
-            sql = "UPDATE products SET name = ?, price = ? WHERE id = ?";
+            sql = "UPDATE products SET name = ?, price = ?, category_id = ? WHERE id = ?";
         } else {
-            sql = "INSERT INTO products (name, price, registration_date) VALUES (?, ?, ?)";
+            sql = "INSERT INTO products (name, price, category_id, registration_date) VALUES (?, ?, ?, ?)";
         }
         try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
             statement.setString(1, product.getName());
             statement.setDouble(2, product.getPrice());
+            statement.setLong(3, product.getCategory().getId());
             if (product.getId() != null && product.getId() > 0) {
-                statement.setLong(3, product.getId());
+                statement.setLong(4, product.getId());
             } else {
-                statement.setDate(3, new Date(product.getRegistrationDate().getTime()));
+                statement.setDate(4, new Date(product.getRegistrationDate().getTime()));
             }
+
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
@@ -83,5 +79,17 @@ public class ProductRepository implements Repository<Product>{
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+    
+    private Product createProduct(ResultSet resultSet) throws SQLException {
+        return new Product(
+                resultSet.getLong("id"),
+                resultSet.getString("name"),
+                resultSet.getDouble("price"),
+                resultSet.getDate("registration_date"),
+                new Category(
+                        resultSet.getLong("category_id"),
+                        resultSet.getString("category")
+                ));
     }
 }

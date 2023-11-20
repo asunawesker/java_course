@@ -1,4 +1,6 @@
-package com.asunawesker;
+package com.asunawesker.java.jdbc;
+
+import com.asunawesker.java.jdbc.util.DatabaseConnection;
 
 import java.sql.*;
 import java.util.logging.Logger;
@@ -13,11 +15,8 @@ public class Main {
     all objects which implement java.io.Closeable, can be used as a resource.
      */
     public static void main(String[] args) {
-        String url = "jdbc:postgresql://172.17.0.2:5432/java_course?currentSchema=intro_db";
-        String username = "postgres";
-        String password = "postgres";
 
-        try (Connection connection = DriverManager.getConnection(url, username, password);
+        try (Connection connection = DatabaseConnection.getInstance();
              Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery("SELECT * FROM products");){
 

@@ -1,23 +1,19 @@
 package com.asunawesker.java.jdbc.jdbc.repository;
 
 import com.asunawesker.java.jdbc.jdbc.model.Category;
-import com.asunawesker.java.jdbc.jdbc.util.DatabaseConnection;
 
-import javax.swing.plaf.nimbus.State;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class CategoryRepository implements Repository<Category>{
-
-    private Connection getConnection() throws SQLException {
-        return DatabaseConnection.getConnection();
-    }
+    
+    private Connection connection;
 
     @Override
     public List<Category> getAll() {
         List<Category> categories = new ArrayList<>();
-        try(Statement statement = getConnection().createStatement();
+        try(Statement statement = connection.createStatement();
             ResultSet resultSet = statement.executeQuery("SELECT * FROM categories")){
             while(resultSet.next()){
                 categories.add(createCategory(resultSet));
@@ -31,7 +27,7 @@ public class CategoryRepository implements Repository<Category>{
     @Override
     public Category getById(Long id) {
         Category category = new Category();
-        try(PreparedStatement statement = getConnection().prepareStatement("SELECT * FROM categories WHERE id = ?")){
+        try(PreparedStatement statement = connection.prepareStatement("SELECT * FROM categories WHERE id = ?")){
             statement.setLong(1, id);
             try(ResultSet resultSet = statement.executeQuery();){
                 if(resultSet.next()){
@@ -52,7 +48,7 @@ public class CategoryRepository implements Repository<Category>{
         } else {
             sql = "INSERT INTO categories (name) VALUES (?)";
         }
-        try(PreparedStatement statement = getConnection().prepareStatement(sql)){
+        try(PreparedStatement statement = connection.prepareStatement(sql)){
             statement.setString(1, category.getName());
             if(category.getId() != null && category.getId() > 0){
                 statement.setLong(2, category.getId());
@@ -77,12 +73,17 @@ public class CategoryRepository implements Repository<Category>{
     public void delete(Long id) {
         try(
             PreparedStatement statement =
-                getConnection().prepareStatement("DELETE FROM categories WHERE id = ?");){
+                connection.prepareStatement("DELETE FROM categories WHERE id = ?");){
             statement.setLong(1, id);
             statement.executeUpdate();
         } catch(SQLException e){
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void setConnection(Connection connection) {
+        this.connection = connection;
     }
 
     private Category createCategory(ResultSet resultSet) throws SQLException {

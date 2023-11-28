@@ -2,24 +2,21 @@ package com.asunawesker.java.jdbc.jdbc.repository;
 
 import com.asunawesker.java.jdbc.jdbc.model.Category;
 import com.asunawesker.java.jdbc.jdbc.model.Product;
-import com.asunawesker.java.jdbc.jdbc.util.DatabaseConnection;
 
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ProductRepository implements Repository<Product>{
-
-    private Connection getConnection() throws SQLException {
-        return DatabaseConnection.getConnection();
-    }
+    private Connection connection;
 
     @Override
     public List<Product> getAll() {
         List<Product> products = new ArrayList<>();
-        try(Statement statement = getConnection().createStatement();
+        try(Statement statement = connection.createStatement();
             ResultSet resultSet =
-                    statement.executeQuery("SELECT p.*, c.name as category FROM products as p INNER JOIN categories as c ON (p.category_id = c.id)")) {
+                    statement.executeQuery("SELECT p.*, c.name as category FROM products as p " +
+                            "INNER JOIN categories as c ON (p.category_id = c.id)")) {
             while(resultSet.next()){
                 products.add(createProduct(resultSet));
             }
@@ -32,8 +29,9 @@ public class ProductRepository implements Repository<Product>{
     @Override
     public Product getById(Long id) {
         Product product = null;
-        try(PreparedStatement statement = getConnection()
-                .prepareStatement("SELECT p.*, c.name as category FROM products as p INNER JOIN categories as c ON (p.category_id = c.id) WHERE id = ?");) {
+        try(PreparedStatement statement = connection
+                .prepareStatement("SELECT p.*, c.name as category FROM products as p " +
+                        "INNER JOIN categories as c ON (p.category_id = c.id) WHERE id = ?");) {
             statement.setLong(1, id);
             try(ResultSet resultSet = statement.executeQuery();){
                 if(resultSet.next()){
@@ -54,7 +52,7 @@ public class ProductRepository implements Repository<Product>{
         } else {
             sql = "INSERT INTO products (name, price, category_id, registration_date) VALUES (?, ?, ?, ?)";
         }
-        try (PreparedStatement statement = getConnection().prepareStatement(sql)) {
+        try (PreparedStatement statement = connection.prepareStatement(sql)) {
             statement.setString(1, product.getName());
             statement.setDouble(2, product.getPrice());
             statement.setLong(3, product.getCategory().getId());
@@ -80,13 +78,18 @@ public class ProductRepository implements Repository<Product>{
 
     @Override
     public void delete(Long id) {
-        try(PreparedStatement statement = getConnection()
+        try(PreparedStatement statement = connection
                 .prepareStatement("DELETE FROM products WHERE id = ?");) {
             statement.setLong(1, id);
             statement.executeUpdate();
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @Override
+    public void setConnection(Connection connection) {
+        this.connection = connection;
     }
     
     private Product createProduct(ResultSet resultSet) throws SQLException {

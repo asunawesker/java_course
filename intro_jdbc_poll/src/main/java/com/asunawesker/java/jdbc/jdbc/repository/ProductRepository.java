@@ -47,7 +47,7 @@ public class ProductRepository implements Repository<Product>{
     }
 
     @Override
-    public void save(Product product) {
+    public Product save(Product product) {
         String sql = null;
         if (product.getId() != null && product.getId() > 0) {
             sql = "UPDATE products SET name = ?, price = ?, category_id = ? WHERE id = ?";
@@ -63,8 +63,16 @@ public class ProductRepository implements Repository<Product>{
             } else {
                 statement.setDate(4, new Date(product.getRegistrationDate().getTime()));
             }
-
             statement.executeUpdate();
+
+            if(product.getId() == null){
+                try(ResultSet resultSet = statement.getGeneratedKeys()){
+                    if(resultSet.next()){
+                        product.setId(resultSet.getLong(1));
+                    }
+                }
+            }
+            return product;
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
